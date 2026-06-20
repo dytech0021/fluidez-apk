@@ -1,0 +1,17 @@
+# Gradle / build
+.gradle/
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Configuração local (NÃO versionar — contém o caminho do SDK)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+
+# Sistema
+.DS_Store
