@@ -13,14 +13,24 @@ android {
         minSdk = 26
         targetSdk = 35
         // Em build local usa os valores fixos; no GitHub Actions são sobrescritos.
-        versionCode = (project.findProperty("versionCodeOverride") as String?)?.toIntOrNull() ?: 9
-        versionName = (project.findProperty("versionNameOverride") as String?) ?: "1.8"
+        versionCode = (project.findProperty("versionCodeOverride") as String?)?.toIntOrNull() ?: 10
+        versionName = (project.findProperty("versionNameOverride") as String?) ?: "1.9"
         vectorDrawables { useSupportLibrary = true }
+    }
+
+    signingConfigs {
+        create("fluidez") {
+            storeFile = file("fluidez.jks")
+            storePassword = "fluidez123"
+            keyAlias = "fluidez"
+            keyPassword = "fluidez123"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("fluidez")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

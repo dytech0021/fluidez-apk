@@ -1,0 +1,70 @@
+name: Build & Release APK
+
+on:
+  # Dispara manualmente pela aba Actions do GitHub
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão (ex: 1.9)"
+        required: true
+        default: "1.9"
+  # Ou ao criar uma tag tipo v1.9
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Define versão
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            V="${{ github.event.inputs.version }}"
+          fi
+          echo "name=$V" >> "$GITHUB_OUTPUT"
+          echo "code=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_OUTPUT"
+          echo "Versão: $V (code $((100 + GITHUB_RUN_NUMBER)))"
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instala plataformas do SDK
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build APK (release assinado)
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease \
+            -PversionNameOverride=${{ steps.ver.outputs.name }} \
+            -PversionCodeOverride=${{ steps.ver.outputs.code }}
+
+      - name: Renomeia APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk \
+             out/fluidez-${{ steps.ver.outputs.name }}.apk
+
+      - name: Publica Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.name }}
+          name: Fluidez v${{ steps.ver.outputs.name }}
+          files: out/fluidez-${{ steps.ver.outputs.name }}.apk
+          generate_release_notes: true

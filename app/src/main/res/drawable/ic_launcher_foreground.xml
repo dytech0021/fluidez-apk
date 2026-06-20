@@ -3,20 +3,8 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Halter (dumbbell) estilizado -->
+    <!-- Raio estilizado: velocidade e fluidez -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M26,46 H32 V62 H26 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M33,42 H39 V66 H33 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M39,51 H69 V57 H39 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M69,42 H75 V66 H69 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M76,46 H82 V62 H76 Z" />
+        android:pathData="M57,21 L36,59 L51,59 L44,87 L74,47 L57,47 L66,21 Z" />
 </vector>
