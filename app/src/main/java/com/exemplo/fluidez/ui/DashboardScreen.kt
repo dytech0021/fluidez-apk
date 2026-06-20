@@ -2,6 +2,7 @@ package com.exemplo.fluidez.ui
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -102,6 +105,7 @@ fun DashboardScreen(viewModel: DashboardViewModel = viewModel()) {
 
         AdbSetupCard()
         ShizukuSetupCard()
+        UsbModeCard()
         AnimationCard()
         RefreshRateCard()
         MaintenanceCard()
@@ -228,6 +232,7 @@ private fun AdbSetupCard() {
     var connected by remember { mutableStateOf(AdbManager.isReady()) }
     var endpoint by remember { mutableStateOf("") }
     var code by remember { mutableStateOf("") }
+    var connectEndpoint by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { AdbManager.init(context) }
@@ -301,6 +306,36 @@ private fun AdbSetupCard() {
                         modifier = Modifier.weight(1f)
                     ) { Text("Conectar") }
                 }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Sem WiFi/mDNS? Conecte direto pela porta de conexão que aparece na " +
+                        "tela 'Depuração sem fio' (ex: 127.0.0.1:porta):",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = connectEndpoint, onValueChange = { connectEndpoint = it },
+                    label = { Text("IP:porta de conexão") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = {
+                        val parts = connectEndpoint.trim().split(":")
+                        val port = parts.getOrNull(1)?.toIntOrNull()
+                        val host = parts.getOrNull(0)?.ifBlank { "127.0.0.1" } ?: "127.0.0.1"
+                        if (port != null) {
+                            status = "Conectando..."
+                            AdbManager.connectTo(host, port) { ok, msg ->
+                                connected = AdbManager.isReady()
+                                status = if (ok) "Conectado!" else "Falha: $msg"
+                            }
+                        } else {
+                            status = "Use o formato IP:porta"
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Conectar por IP:porta") }
             }
             if (status.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
@@ -381,6 +416,71 @@ private fun ShizukuSetupCard() {
                 Spacer(Modifier.height(8.dp))
                 Text(status, style = MaterialTheme.typography.bodySmall)
             }
+        }
+    }
+}
+
+@Composable
+private fun UsbModeCard() {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val pkg = context.packageName
+
+    val grantCmd = "adb shell pm grant $pkg android.permission.WRITE_SECURE_SETTINGS"
+    val shizukuCmd =
+        "adb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh"
+
+    fun copy(label: String, text: String) {
+        clipboard.setText(AnnotatedString(text))
+        Toast.makeText(context, "$label copiado", Toast.LENGTH_SHORT).show()
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = BrandAmber.copy(alpha = 0.10f))
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Modo USB (sem WiFi)", fontWeight = FontWeight.Bold, color = BrandAmber)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Para usar só com dados móveis. Conecte o celular ao PC uma vez " +
+                    "(Depuração USB ligada) e rode um dos comandos abaixo no computador.",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Spacer(Modifier.height(12.dp))
+            Text("1) Liberar animações e taxa de atualização (permanente):",
+                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(grantCmd, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(4.dp))
+            OutlinedButton(
+                onClick = { copy("Comando", grantCmd) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Copiar comando") }
+
+            Spacer(Modifier.height(12.dp))
+            Text("2) Liberar tudo via Shizuku (repetir a cada reinício):",
+                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(shizukuCmd, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(4.dp))
+            OutlinedButton(
+                onClick = { copy("Comando", shizukuCmd) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Copiar comando") }
+
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = { SettingsNavigator.openDeveloperOptions(context) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Abrir Opções de Desenvolvedor") }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Dica: depois de conectado por WiFi uma vez, você pode desligar o WiFi e " +
+                    "usar dados móveis — a conexão (loopback) continua ativa até reiniciar.",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }

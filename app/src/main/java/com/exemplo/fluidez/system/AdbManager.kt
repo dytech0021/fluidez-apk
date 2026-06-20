@@ -88,5 +88,18 @@ object AdbManager : PrivShell {
         }.start()
     }
 
+    /** Conecta direto em host:porta de conexão (sem mDNS — útil sem WiFi/dados móveis). */
+    fun connectTo(host: String, port: Int, onResult: (Boolean, String) -> Unit) {
+        Thread {
+            val result = try {
+                val ok = AdbConnectionManager.getInstance(appContext).connect(host, port)
+                if (ok) "OK:conectado" else "ERR:conexão falhou"
+            } catch (e: Exception) {
+                "ERR:${e.message}"
+            }
+            post { onResult(result.startsWith("OK"), result) }
+        }.start()
+    }
+
     private fun post(block: () -> Unit) = Handler(Looper.getMainLooper()).post(block)
 }
