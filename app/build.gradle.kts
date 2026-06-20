@@ -13,8 +13,8 @@ android {
         minSdk = 26
         targetSdk = 35
         // Em build local usa os valores fixos; no GitHub Actions são sobrescritos.
-        versionCode = (project.findProperty("versionCodeOverride") as String?)?.toIntOrNull() ?: 10
-        versionName = (project.findProperty("versionNameOverride") as String?) ?: "1.9"
+        versionCode = (project.findProperty("versionCodeOverride") as String?)?.toIntOrNull() ?: 11
+        versionName = (project.findProperty("versionNameOverride") as String?) ?: "1.10"
         vectorDrawables { useSupportLibrary = true }
     }
 
