@@ -2,6 +2,7 @@ package com.exemplo.fluidez.ui
 
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -30,9 +33,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.exemplo.fluidez.ui.theme.BrandAmber
+import com.exemplo.fluidez.ui.theme.BrandCoral
+import com.exemplo.fluidez.ui.theme.BrandPink
+import com.exemplo.fluidez.ui.theme.BrandPurple
+import com.exemplo.fluidez.ui.theme.BrandTeal
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -68,11 +80,7 @@ fun DashboardScreen(viewModel: DashboardViewModel = viewModel()) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            "Fluidez",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
+        HeaderBanner()
 
         UpdateCard()
         ProfilesCard()
@@ -81,12 +89,14 @@ fun DashboardScreen(viewModel: DashboardViewModel = viewModel()) {
         UsageCard(
             title = "Memória RAM",
             detail = "${formatBytes(snapshot.usedRam)} de ${formatBytes(snapshot.totalRam)}",
-            fraction = snapshot.ramUsedFraction
+            fraction = snapshot.ramUsedFraction,
+            accent = BrandPurple
         )
         UsageCard(
             title = "Armazenamento",
             detail = "${formatBytes(snapshot.usedStorage)} de ${formatBytes(snapshot.totalStorage)}",
-            fraction = snapshot.storageUsedFraction
+            fraction = snapshot.storageUsedFraction,
+            accent = BrandTeal
         )
         BatteryCard(snapshot)
 
@@ -558,13 +568,49 @@ private fun MaintenanceCard() {
 }
 
 @Composable
-private fun UsageCard(title: String, detail: String, fraction: Float) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun HeaderBanner() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(BrandPurple, BrandPink, BrandCoral)
+                )
+            )
+            .padding(20.dp)
+    ) {
+        Column {
+            Text(
+                "Fluidez",
+                color = Color.White,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black
+            )
+            Text(
+                "Seu Android mais rápido e fluido ✨",
+                color = Color.White.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+private fun UsageCard(title: String, detail: String, fraction: Float, accent: Color) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = accent.copy(alpha = 0.10f)
+        )
+    ) {
         Column(Modifier.padding(16.dp)) {
-            Text(title, fontWeight = FontWeight.Bold)
+            Text(title, fontWeight = FontWeight.Bold, color = accent)
             Spacer(Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = { fraction },
+                color = accent,
+                trackColor = accent.copy(alpha = 0.20f),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(8.dp))
@@ -575,11 +621,21 @@ private fun UsageCard(title: String, detail: String, fraction: Float) {
 
 @Composable
 private fun BatteryCard(snapshot: SystemSnapshot) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val accent = when {
+        snapshot.isCharging -> BrandTeal
+        snapshot.batteryPercent <= 20 -> BrandCoral
+        else -> BrandAmber
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = accent.copy(alpha = 0.10f)
+        )
+    ) {
         Column(Modifier.padding(16.dp)) {
-            Text("Bateria", fontWeight = FontWeight.Bold)
+            Text("Bateria", fontWeight = FontWeight.Bold, color = accent)
             Spacer(Modifier.height(8.dp))
-            val status = if (snapshot.isCharging) "carregando" else "na bateria"
+            val status = if (snapshot.isCharging) "carregando ⚡" else "na bateria"
             Text("${snapshot.batteryPercent}% • $status")
             Text("Temperatura: ${snapshot.batteryTemperature} °C")
         }

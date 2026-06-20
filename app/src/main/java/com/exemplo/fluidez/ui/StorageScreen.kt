@@ -22,11 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.exemplo.fluidez.ui.theme.BrandTeal
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.exemplo.fluidez.data.AppStorage
@@ -42,12 +44,17 @@ fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
 
-        Card(Modifier.fillMaxWidth()) {
+        Card(
+            Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = BrandTeal.copy(alpha = 0.10f))
+        ) {
             Column(Modifier.padding(16.dp)) {
-                Text("Armazenamento", fontWeight = FontWeight.Bold)
+                Text("Armazenamento", fontWeight = FontWeight.Bold, color = BrandTeal)
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(
                     progress = { state.overview.usedFraction },
+                    color = BrandTeal,
+                    trackColor = BrandTeal.copy(alpha = 0.20f),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
